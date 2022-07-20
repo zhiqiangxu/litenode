@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ethereum/go-ethereum v1.10.20
-	github.com/zhiqiangxu/lru v0.0.0-20220719073506-c6553491e6ad
+	github.com/zhiqiangxu/lru v0.0.0-20220720102052-1a253b95c230
 	gotest.tools/v3 v3.3.0
 )
 

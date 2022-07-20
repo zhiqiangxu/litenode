@@ -51,19 +51,18 @@ func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
 	out := make([]*types.Transaction, 0)
 	for i := range txs {
 		tx := txs[i]
-		if _, ok := pool.cache.Get(tx.Hash()); ok {
-			errs[i] = core.ErrAlreadyKnown
-			continue
-		}
 
 		if tx.To() == nil {
 			errs[i] = ErrIsCreateContract
 			continue
 		}
 
-		pool.cache.Add(tx.Hash(), tx, pool.Expire)
+		new := pool.cache.Add(tx.Hash(), tx, pool.Expire)
 
-		out = append(out, tx)
+		if new {
+			out = append(out, tx)
+		}
+
 	}
 
 	if len(out) > 0 {
