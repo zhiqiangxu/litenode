@@ -211,8 +211,8 @@ github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673/go.mod h1:N3UwUGtsr
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220719135808-0fd0117b043d h1:+v8/kIOrQ05RoeQOcYfYgcExNjg6u5to6KVNyn70iWI=
 github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220719135808-0fd0117b043d/go.mod h1:m2m08SAQ8XB0VcVBoDg9n74Dw5PUMl3hzv1NXVBFPfg=
-github.com/zhiqiangxu/lru v0.0.0-20220720102052-1a253b95c230 h1:33UskLY5WflF50oEnB8eOL2V8LVvghardc8WgQyAjZw=
-github.com/zhiqiangxu/lru v0.0.0-20220720102052-1a253b95c230/go.mod h1:uwAt3ibiuws+at6aG4+XDXKgYLpcbuVgm5/LSAYR+XA=
+github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187 h1:bF09katIoN3Wgwazs9H4hjImze9CxgPzJPYokpfTcoo=
+github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187/go.mod h1:uwAt3ibiuws+at6aG4+XDXKgYLpcbuVgm5/LSAYR+XA=
 github.com/zhiqiangxu/rpheap v0.0.0-20191222053847-9002d7e5a1a1/go.mod h1:aYy7SAJP4LY667NfqoMR/ZJAy8HQ8KVtQTvEDrGS5ks=
 github.com/zhiqiangxu/util v0.0.0-20220701050115-28679d0e8a73 h1:/dR7Cl8OTC9tTjGG/N1w1tw3UI86Af8rMsXbqmVHiSs=
 github.com/zhiqiangxu/util v0.0.0-20220701050115-28679d0e8a73/go.mod h1:CokMTsNrF6lxiVwxKoAgUr2zDutb/jBcEkFNnSGXYy4=

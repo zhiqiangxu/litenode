@@ -34,7 +34,7 @@ func (pool *TxPool) Has(hash common.Hash) bool {
 }
 
 func (pool *TxPool) Get(hash common.Hash) *types.Transaction {
-	tx, ok := pool.cache.Get(hash)
+	tx, ok := pool.cache.RGet(hash)
 	if !ok {
 		return nil
 	}
