@@ -49,7 +49,8 @@ var (
 func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
 	errs := make([]error, len(txs))
 	out := make([]*types.Transaction, 0)
-	for i, tx := range txs {
+	for i := range txs {
+		tx := txs[i]
 		if _, ok := pool.cache.Get(tx.Hash()); ok {
 			errs[i] = core.ErrAlreadyKnown
 			continue
