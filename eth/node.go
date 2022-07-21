@@ -4,6 +4,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -69,4 +70,8 @@ func (n *Node) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscripti
 
 func (n *Node) PeerCount() int {
 	return n.handler.peers.Len()
+}
+
+func (n *Node) AllPeers() []*eth.EthPeer {
+	return n.handler.peers.AllPeers()
 }
