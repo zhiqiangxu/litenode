@@ -71,4 +71,4 @@ require (
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.10.20 => github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220721080314-633439b5e914
+replace github.com/ethereum/go-ethereum v1.10.20 => github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220727063928-2f17a6b0401e

@@ -80,6 +80,8 @@ type HandlerConfig struct {
 	GenesisHash common.Hash
 
 	TxPool txPool
+
+	Upgrade bool
 }
 
 func NewHandler(config HandlerConfig, maxPeers int) *Handler {
@@ -132,7 +134,7 @@ func (h *Handler) RunPeer(peer *eth.Peer, handler eth.Handler) error {
 	h.peerWG.Add(1)
 	defer h.peerWG.Done()
 
-	if err := peer.HandshakeLite(h.NetworkID, h.GenesisHash); err != nil {
+	if err := peer.HandshakeLite(h.NetworkID, h.GenesisHash, h.Upgrade); err != nil {
 		// zlog.Error().Err(err).
 		// 	Str("peer.id", peer.ID()).
 		// 	Str("peer.ip", peer.RemoteAddr().String()).
