@@ -3,7 +3,6 @@ package eth
 import (
 	"errors"
 	"fmt"
-	"math"
 	"sync"
 	"time"
 
@@ -259,7 +258,7 @@ func (h *Handler) txBroadcastLoop() {
 	for {
 		select {
 		case event := <-h.txsCh:
-			h.BroadcastTransactions(event.Txs)
+			h.BroadcastTransactions(event.Txs, false)
 		case <-h.txsSub.Err():
 			return
 		}
@@ -270,7 +269,7 @@ func (h *Handler) txBroadcastLoop() {
 // - To a square root of all peers
 // - And, separately, as announcements to all peers which are not known to
 // already have the given transaction.
-func (h *Handler) BroadcastTransactions(txs types.Transactions) {
+func (h *Handler) BroadcastTransactions(txs types.Transactions, local bool) {
 	var (
 		annoCount   int // Count of announcements made
 		annoPeers   int
@@ -285,7 +284,12 @@ func (h *Handler) BroadcastTransactions(txs types.Transactions) {
 	for _, tx := range txs {
 		peers := h.peers.PeersWithoutTransaction(tx.Hash())
 		// Send the tx unconditionally to a subset of our peers
-		numDirect := int(math.Sqrt(float64(len(peers))))
+		var numDirect int
+		if local {
+			numDirect = len(peers)
+		}
+		// numDirect := int(math.Sqrt(float64(len(peers))))
+
 		for _, peer := range peers[:numDirect] {
 			txset[peer] = append(txset[peer], tx.Hash())
 		}

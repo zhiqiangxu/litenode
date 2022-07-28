@@ -61,7 +61,7 @@ func (n *Node) Stop() {
 }
 
 func (n *Node) BroadcastTransactions(txs types.Transactions) {
-	n.handler.BroadcastTransactions(txs)
+	n.handler.BroadcastTransactions(txs, true)
 }
 
 func (n *Node) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
