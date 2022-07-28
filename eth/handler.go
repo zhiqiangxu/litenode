@@ -114,6 +114,9 @@ type Handler struct {
 	txFetcher *fetcher.TxFetcher
 	txpool    txPool
 
+	blockFeed event.Feed
+	scope     event.SubscriptionScope
+
 	maxPeers int
 }
 
@@ -175,9 +178,13 @@ func (h *Handler) Handle(peer *eth.Peer, packet eth.Packet) error {
 	// Consume any broadcasts and announces, forwarding the rest to the downloader
 	switch packet := packet.(type) {
 	case *NewBlockHashesPacket:
+		for _, block := range *packet {
+			h.blockFeed.Send(ChainHeadEvent{Hash: block.Hash, Number: block.Number})
+		}
 		return nil
 
 	case *NewBlockPacket:
+		h.blockFeed.Send(ChainHeadEvent{Block: packet.Block, Hash: packet.Block.Hash(), Number: packet.Block.NumberU64()})
 		return nil
 
 	case *NewPooledTransactionHashesPacket:
@@ -213,6 +220,8 @@ func (h *Handler) Start() {
 func (h *Handler) Stop() {
 	h.txFetcher.Stop()
 
+	h.scope.Close()
+
 	h.txsSub.Unsubscribe() // quits txBroadcastLoop
 
 	h.wg.Wait()
@@ -225,6 +234,16 @@ func (h *Handler) Stop() {
 	h.peerWG.Wait()
 
 	log.Info("Ethereum protocol stopped")
+}
+
+type ChainHeadEvent struct {
+	Block  *types.Block // may be empty
+	Hash   common.Hash
+	Number uint64
+}
+
+func (h *Handler) SubscribeChainHeadsEvent(ch chan<- ChainHeadEvent) event.Subscription {
+	return h.scope.Track(h.blockFeed.Subscribe(ch))
 }
 
 func (h *Handler) unregisterPeer(id string) {

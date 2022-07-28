@@ -58,6 +58,7 @@ func (n *Node) Start() error {
 func (n *Node) Stop() {
 	n.handler.Stop()
 	n.server.Stop()
+	n.txPool.Stop()
 }
 
 func (n *Node) BroadcastTransactions(txs types.Transactions) {
@@ -66,6 +67,10 @@ func (n *Node) BroadcastTransactions(txs types.Transactions) {
 
 func (n *Node) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
 	return n.txPool.SubscribeNewTxsEvent(ch)
+}
+
+func (n *Node) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription {
+	return n.handler.SubscribeChainHeadsEvent(ch)
 }
 
 func (n *Node) PeerCount() int {

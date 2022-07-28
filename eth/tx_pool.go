@@ -81,3 +81,7 @@ func (pool *TxPool) Pending(enforceTips bool) map[common.Address]types.Transacti
 func (pool *TxPool) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
 	return pool.scope.Track(pool.txFeed.Subscribe(ch))
 }
+
+func (pool *TxPool) Stop() {
+	pool.scope.Close()
+}
