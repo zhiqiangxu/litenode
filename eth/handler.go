@@ -196,6 +196,14 @@ func (h *Handler) Handle(peer *eth.Peer, packet eth.Packet) error {
 	case *PooledTransactionsPacket:
 		return h.txFetcher.Enqueue(peer.ID(), *packet, true)
 
+	case *BlockHeadersPacket:
+		return nil
+	case *BlockBodiesPacket:
+		return nil
+	case *NodeDataPacket:
+		return nil
+	case *ReceiptsPacket:
+		return nil
 	default:
 		return fmt.Errorf("unexpected eth packet type: %T", packet)
 	}
