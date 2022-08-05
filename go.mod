@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/ethereum/go-ethereum v1.10.20
+	github.com/panjf2000/ants/v2 v2.5.0
 	github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187
 	gotest.tools/v3 v3.3.0
 )
@@ -71,4 +72,4 @@ require (
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.10.20 => github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220727063928-2f17a6b0401e
+replace github.com/ethereum/go-ethereum v1.10.20 => github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220805050720-d35593fc3269

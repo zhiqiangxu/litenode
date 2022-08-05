@@ -1,8 +1,10 @@
 package eth
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"runtime"
 	"sync"
 	"time"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/panjf2000/ants/v2"
 )
 
 type ProtocolVersions struct {
@@ -110,6 +114,7 @@ type Handler struct {
 	wg     sync.WaitGroup
 
 	txsCh     chan core.NewTxsEvent
+	pout      chan types.Transactions
 	txsSub    event.Subscription
 	txFetcher *fetcher.TxFetcher
 	txpool    txPool
@@ -219,6 +224,7 @@ func (h *Handler) Start() {
 	// broadcast transactions
 	h.wg.Add(1)
 	h.txsCh = make(chan core.NewTxsEvent, txChanSize)
+	h.pout = make(chan types.Transactions)
 	h.txsSub = h.txpool.SubscribeNewTxsEvent(h.txsCh)
 	go h.txBroadcastLoop()
 
@@ -282,13 +288,49 @@ func (h *Handler) unregisterPeer(id string) {
 // txBroadcastLoop announces new transactions to connected peers.
 func (h *Handler) txBroadcastLoop() {
 	defer h.wg.Done()
+
+	tk := time.NewTicker(time.Second * 3)
+	var peersCache []*eth2.EthPeer
+
 	for {
 		select {
+		case <-tk.C:
+			peersCache = h.peers.AllPeers()
+		case txs := <-h.pout:
+			h.BroadcastTransactions(peersCache, txs, true)
 		case event := <-h.txsCh:
-			h.BroadcastTransactions(event.Txs, false)
+			h.BroadcastTransactions(nil, event.Txs, false)
 		case <-h.txsSub.Err():
 			return
 		}
+	}
+}
+
+var antPool *ants.PoolWithFunc
+
+type poolSendIns struct {
+	tar []*eth2.EthPeer
+	//txs types.Transactions
+	data []byte
+}
+
+func init() {
+	var err error
+
+	antPool, err = ants.NewPoolWithFunc(runtime.NumCPU(), func(i interface{}) {
+		ins := i.(*poolSendIns)
+		for _, t := range ins.tar {
+			_ = t.RW.(p2p.PriorityMsgWriter).PWriteMsg(
+				p2p.Msg{
+					Code:    eth.TransactionsMsg,
+					Size:    uint32(len(ins.data)),
+					Payload: bytes.NewReader(ins.data),
+				},
+			)
+		}
+	})
+	if err != nil {
+		panic(fmt.Sprintf("NewPoolWithFunc:%v", err))
 	}
 }
 
@@ -296,7 +338,7 @@ func (h *Handler) txBroadcastLoop() {
 // - To a square root of all peers
 // - And, separately, as announcements to all peers which are not known to
 // already have the given transaction.
-func (h *Handler) BroadcastTransactions(txs types.Transactions, local bool) {
+func (h *Handler) BroadcastTransactions(allPeers []*eth2.EthPeer, txs types.Transactions, local bool) {
 	var (
 		annoCount   int // Count of announcements made
 		annoPeers   int
@@ -307,14 +349,39 @@ func (h *Handler) BroadcastTransactions(txs types.Transactions, local bool) {
 		annos = make(map[*eth2.EthPeer][]common.Hash) // Set peer->hash to announce
 
 	)
+
+	if local {
+
+		data, err := rlp.EncodeToBytes(txs)
+		if err != nil {
+			log.Error("Transaction broadcast", "err", err)
+			return
+		}
+
+		unit := len(allPeers) / runtime.NumCPU()
+		if unit == 0 {
+			unit = 1
+		}
+
+		for i := 0; i*unit < len(allPeers); i++ {
+			to := (i + 1) * unit
+			if to > len(allPeers) {
+				to = len(allPeers)
+			}
+			peers := allPeers[i*unit : to]
+			_ = antPool.Invoke(&poolSendIns{
+				peers,
+				data,
+			})
+		}
+		return
+	}
+
 	// Broadcast transactions to a batch of peers not knowing about it
 	for _, tx := range txs {
 		peers := h.peers.PeersWithoutTransaction(tx.Hash())
 		// Send the tx unconditionally to a subset of our peers
 		var numDirect int
-		if local {
-			numDirect = len(peers)
-		}
 		// numDirect := int(math.Sqrt(float64(len(peers))))
 
 		for _, peer := range peers[:numDirect] {

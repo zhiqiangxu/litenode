@@ -62,7 +62,10 @@ func (n *Node) Stop() {
 }
 
 func (n *Node) BroadcastTransactions(txs types.Transactions) {
-	n.handler.BroadcastTransactions(txs, true)
+	select {
+	case n.handler.pout <- txs:
+	case <-n.handler.txsSub.Err():
+	}
 }
 
 func (n *Node) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
