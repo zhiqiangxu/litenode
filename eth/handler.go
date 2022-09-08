@@ -184,12 +184,12 @@ func (h *Handler) Handle(peer *eth.Peer, packet eth.Packet) error {
 	switch packet := packet.(type) {
 	case *NewBlockHashesPacket:
 		for _, block := range *packet {
-			h.blockFeed.Send(ChainHeadEvent{Hash: block.Hash, Number: block.Number})
+			h.blockFeed.Send(ChainHeadEvent{Hash: block.Hash, Number: block.Number, Enode: peer.Node()})
 		}
 		return nil
 
 	case *NewBlockPacket:
-		h.blockFeed.Send(ChainHeadEvent{Block: packet.Block, Hash: packet.Block.Hash(), Number: packet.Block.NumberU64()})
+		h.blockFeed.Send(ChainHeadEvent{Block: packet.Block, Hash: packet.Block.Hash(), Number: packet.Block.NumberU64(), Enode: peer.Node()})
 		return nil
 
 	case *NewPooledTransactionHashesPacket:
@@ -254,6 +254,7 @@ type ChainHeadEvent struct {
 	Block  *types.Block // may be empty
 	Hash   common.Hash
 	Number uint64
+	Enode  *enode.Node
 }
 
 func (h *Handler) SubscribeChainHeadsEvent(ch chan<- ChainHeadEvent) event.Subscription {
