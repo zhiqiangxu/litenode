@@ -17,17 +17,22 @@ type Node struct {
 }
 
 type NodeConfig struct {
-	P2P              p2p.Config
-	Handler          HandlerConfig
-	TxPool           TxPoolConfig
-	LogLevel         log.Lvl
-	ProtocolVersions ProtocolVersions
+	P2P                     p2p.Config
+	Handler                 HandlerConfig
+	TxPool                  TxPoolConfig
+	SyncChallengeHeaderPool *SyncChallengeHeaderPoolConfig
+	LogLevel                log.Lvl
+	ProtocolVersions        ProtocolVersions
 }
 
 func NewNode(config *NodeConfig) *Node {
 	txPool := NewTxPool(config.TxPool)
 
-	config.Handler.TxPool = txPool
+	config.Handler.txPool = txPool
+
+	if config.SyncChallengeHeaderPool != nil {
+		config.Handler.syncChallengeHeaderPool = NewSyncChallengeHeaderool(*config.SyncChallengeHeaderPool)
+	}
 	handler := NewHandler(config.Handler, config.P2P.MaxPeers)
 	config.P2P.Protocols = MakeProtocols(handler, config.ProtocolVersions)
 	if config.P2P.Logger == nil {

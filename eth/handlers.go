@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
-func handleNewBlockhashes(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleNewBlockhashes(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of new block announcements just arrived
 	ann := new(NewBlockHashesPacket)
 	if err := msg.Decode(ann); err != nil {
@@ -24,7 +24,7 @@ func handleNewBlockhashes(backend eth.Backend, msg Decoder, peer *eth.Peer) erro
 	return backend.Handle(peer, ann)
 }
 
-func handleNewBlock(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleNewBlock(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// Retrieve and decode the propagated block
 	ann := new(NewBlockPacket)
 	if err := msg.Decode(ann); err != nil {
@@ -50,7 +50,7 @@ func handleNewBlock(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
 	return backend.Handle(peer, ann)
 }
 
-func handleTransactions(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleTransactions(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// Transactions arrived, make sure we have a valid and fresh chain to handle them
 	if !backend.AcceptTxs() {
 		return nil
@@ -70,7 +70,7 @@ func handleTransactions(backend eth.Backend, msg Decoder, peer *eth.Peer) error 
 	return backend.Handle(peer, &txs)
 }
 
-func handleNewPooledTransactionHashes(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleNewPooledTransactionHashes(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// New transaction announcement arrived, make sure we have
 	// a valid and fresh chain to handle them
 	if !backend.AcceptTxs() {
@@ -88,11 +88,11 @@ func handleNewPooledTransactionHashes(backend eth.Backend, msg Decoder, peer *et
 }
 
 // handleGetBlockHeaders66 is the eth/66 version of handleGetBlockHeaders
-func handleGetBlockHeaders66(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
-	return nil
+func handleGetBlockHeaders66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
+	return backend.HandleSyncChallenge(peer, msg)
 }
 
-func handleBlockHeaders(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleBlockHeaders(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of headers arrived to one of our previous requests
 	res := new(BlockHeadersPacket)
 	if err := msg.Decode(res); err != nil {
@@ -101,7 +101,7 @@ func handleBlockHeaders(backend eth.Backend, msg Decoder, peer *eth.Peer) error 
 	return backend.Handle(peer, res)
 }
 
-func handleBlockHeaders66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleBlockHeaders66(_ eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of headers arrived to one of our previous requests
 	res := new(BlockHeadersPacket66)
 	if err := msg.Decode(res); err != nil {
@@ -121,11 +121,11 @@ func handleBlockHeaders66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
 	}, metadata)
 }
 
-func handleGetBlockBodies66(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleGetBlockBodies66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	return nil
 }
 
-func handleBlockBodies(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleBlockBodies(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of block bodies arrived to one of our previous requests
 	res := new(BlockBodiesPacket)
 	if err := msg.Decode(res); err != nil {
@@ -134,7 +134,7 @@ func handleBlockBodies(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
 	return backend.Handle(peer, res)
 }
 
-func handleBlockBodies66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleBlockBodies66(_ eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of block bodies arrived to one of our previous requests
 	res := new(BlockBodiesPacket66)
 	if err := msg.Decode(res); err != nil {
@@ -159,7 +159,7 @@ func handleBlockBodies66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
 	}, metadata)
 }
 
-func handleNodeData(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleNodeData(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of node state data arrived to one of our previous requests
 	res := new(NodeDataPacket)
 	if err := msg.Decode(res); err != nil {
@@ -168,11 +168,11 @@ func handleNodeData(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
 	return backend.Handle(peer, res)
 }
 
-func handleGetNodeData66(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleGetNodeData66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	return nil
 }
 
-func handleNodeData66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleNodeData66(_ eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of node state data arrived to one of our previous requests
 	res := new(NodeDataPacket66)
 	if err := msg.Decode(res); err != nil {
@@ -185,11 +185,11 @@ func handleNodeData66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
 	}, nil) // No post-processing, we're not using this packet anymore
 }
 
-func handleGetReceipts66(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleGetReceipts66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	return nil
 }
 
-func handleReceipts(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleReceipts(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of receipts arrived to one of our previous requests
 	res := new(ReceiptsPacket)
 	if err := msg.Decode(res); err != nil {
@@ -198,7 +198,7 @@ func handleReceipts(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
 	return backend.Handle(peer, res)
 }
 
-func handleReceipts66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleReceipts66(_ eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of receipts arrived to one of our previous requests
 	res := new(ReceiptsPacket66)
 	if err := msg.Decode(res); err != nil {
@@ -219,11 +219,11 @@ func handleReceipts66(_ eth.Backend, msg Decoder, peer *eth.Peer) error {
 	}, metadata)
 }
 
-func handleGetPooledTransactions66(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handleGetPooledTransactions66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	return nil
 }
 
-func handlePooledTransactions(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handlePooledTransactions(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// Transactions can be processed, parse all of them and deliver to the pool
 	var txs PooledTransactionsPacket
 	if err := msg.Decode(&txs); err != nil {
@@ -239,7 +239,7 @@ func handlePooledTransactions(backend eth.Backend, msg Decoder, peer *eth.Peer) 
 	return backend.Handle(peer, &txs)
 }
 
-func handlePooledTransactions66(backend eth.Backend, msg Decoder, peer *eth.Peer) error {
+func handlePooledTransactions66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// Transactions arrived, make sure we have a valid and fresh chain to handle them
 	if !backend.AcceptTxs() {
 		return nil

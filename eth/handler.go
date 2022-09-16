@@ -82,7 +82,8 @@ type HandlerConfig struct {
 	NetworkID   uint64
 	GenesisHash common.Hash
 
-	TxPool txPool
+	txPool                  txPool
+	syncChallengeHeaderPool *SyncChallengeHeaderPool
 
 	Upgrade bool
 }
@@ -92,7 +93,7 @@ func NewHandler(config HandlerConfig, maxPeers int) *Handler {
 		HandlerConfig: config,
 		peers:         eth2.NewPeerSet(),
 		maxPeers:      maxPeers,
-		txpool:        config.TxPool,
+		txpool:        config.txPool,
 	}
 
 	fetchTx := func(peer string, hashes []common.Hash) error {
@@ -102,6 +103,7 @@ func NewHandler(config HandlerConfig, maxPeers int) *Handler {
 		}
 		return p.RequestTxs(hashes)
 	}
+
 	h.txFetcher = fetcher.NewTxFetcher(h.txpool.Has, h.txpool.AddRemotes, fetchTx)
 
 	return h
@@ -179,6 +181,77 @@ func (h *Handler) PeerInfo(id enode.ID) interface{} {
 	return nil
 }
 
+var (
+	zeroHash             common.Hash
+	syncChallengeTimeout = 7 * time.Second
+)
+
+func (h *Handler) HandleSyncChallenge(peer *eth.Peer, msg eth.Decoder) error {
+	if h.syncChallengeHeaderPool == nil {
+		return nil
+	}
+
+	// Decode the complex header query
+	var query GetBlockHeadersPacket66
+	if err := msg.Decode(&query); err != nil {
+		return fmt.Errorf("%w: message %v: %v", errDecode, msg, err)
+	}
+
+	if query.Origin.Hash != zeroHash {
+		return nil
+	}
+
+	if query.Amount != 1 {
+		return nil
+	}
+
+	header := h.syncChallengeHeaderPool.GetHeader(query.Origin.Number)
+	if header != nil {
+		// fast path
+
+		rlpData, _ := rlp.EncodeToBytes(header)
+		response := []rlp.RawValue{rlpData}
+		return peer.ReplyBlockHeadersRLP(query.RequestId, response)
+	}
+
+	// slow path
+
+	resCh := make(chan *eth.Response)
+	if _, err := peer.RequestHeadersByNumber(query.Origin.Number, 1, 0, false, resCh); err != nil {
+		return err
+	}
+	go func() {
+		timeout := time.NewTimer(syncChallengeTimeout)
+		defer timeout.Stop()
+
+		select {
+		case res := <-resCh:
+			headers := ([]*types.Header)(*res.Res.(*BlockHeadersPacket))
+			if len(headers) != 1 {
+				res.Done <- errors.New("#headers != 1")
+				return
+			}
+
+			h.syncChallengeHeaderPool.AddHeaderIfNotExists(headers[0])
+
+			rlpData, _ := rlp.EncodeToBytes(headers[0])
+			response := []rlp.RawValue{rlpData}
+			err := peer.ReplyBlockHeadersRLP(query.RequestId, response)
+			if err != nil {
+				peer.Log().Warn("ReplyBlockHeadersRLP err", err)
+			}
+			return
+		case <-timeout.C:
+		}
+
+		// handle failure
+		peer.Disconnect(p2p.DiscUselessPeer)
+	}()
+
+	// h.syncChallengeHeaderPool.RememberChallenge(query.Origin.Number, &chanllengeCB{requestID: query.RequestId, peer: peer})
+	return nil
+}
+
 func (h *Handler) Handle(peer *eth.Peer, packet eth.Packet) error {
 	// Consume any broadcasts and announces, forwarding the rest to the downloader
 	switch packet := packet.(type) {
@@ -202,6 +275,24 @@ func (h *Handler) Handle(peer *eth.Peer, packet eth.Packet) error {
 		return h.txFetcher.Enqueue(peer.ID(), *packet, true)
 
 	case *BlockHeadersPacket:
+		// if len(*packet) != 1 {
+		// 	return nil
+		// }
+		// challenges := h.syncChallengeHeaderPool.ClearChallenge((*packet)[0].Number.Uint64())
+		// if len(challenges) == 0 {
+		// 	return nil
+		// }
+
+		// rlpData, _ := rlp.EncodeToBytes((*packet)[0])
+		// response := []rlp.RawValue{rlpData}
+		// for i := range challenges {
+		// 	challenge := challenges[i]
+
+		// 	go func() {
+		// 		challenge.peer.ReplyBlockHeadersRLP(challenge.requestID, response)
+		// 	}()
+
+		// }
 		return nil
 	case *BlockBodiesPacket:
 		return nil
@@ -417,11 +508,7 @@ func Handle(backend eth.Backend, peer *eth.Peer) error {
 	}
 }
 
-type msgHandler func(backend eth.Backend, msg Decoder, peer *eth.Peer) error
-type Decoder interface {
-	Decode(val interface{}) error
-	Time() time.Time
-}
+type msgHandler func(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error
 
 var eth65 = map[uint64]msgHandler{
 	GetBlockHeadersMsg:            handleGetBlockHeaders66,
