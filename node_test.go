@@ -27,7 +27,7 @@ func TestHello(t *testing.T) {
 				NetworkID:   1,
 				GenesisHash: common.HexToHash("0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3"),
 			},
-			TxPool:   eth.TxPoolConfig{Cap: 10000, Expire: 10 * 60},
+			TxPool:   eth.TxPoolConfig{HashCap: 10000, TxCap: 1000},
 			LogLevel: log.LvlDebug,
 			ProtocolVersions: eth.ProtocolVersions{
 				Versions: []uint{eth.ETH67, eth.ETH66},

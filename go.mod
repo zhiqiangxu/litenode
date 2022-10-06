@@ -6,6 +6,8 @@ require (
 	github.com/ethereum/go-ethereum v1.10.20
 	github.com/panjf2000/ants/v2 v2.5.0
 	github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187
+	github.com/zhiqiangxu/util v0.0.0-20221006053922-e92ffd5dbdb0
+	github.com/zhiqiangxu/zcache v0.0.0-20221006072935-bc7cf1e7d28c
 	gotest.tools/v3 v3.3.0
 )
 
@@ -54,7 +56,6 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef // indirect
 	github.com/urfave/cli/v2 v2.10.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	github.com/zhiqiangxu/util v0.0.0-20220701050115-28679d0e8a73 // indirect
 	go.uber.org/atomic v1.5.0 // indirect
 	go.uber.org/multierr v1.3.0 // indirect
 	go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee // indirect

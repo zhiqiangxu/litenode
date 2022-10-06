@@ -1,45 +1,59 @@
 package eth
 
 import (
+	"encoding/binary"
 	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/zhiqiangxu/lru"
+	"github.com/zhiqiangxu/util/concurrent"
+	"github.com/zhiqiangxu/zcache"
 )
 
 type TxPoolConfig struct {
-	Cap    int
-	Expire int
+	HashCap int
+	TxCap   int
 }
 
 type TxPool struct {
-	cache  lru.Cache
-	txFeed event.Feed
-	scope  event.SubscriptionScope
+	hashCache *concurrent.Bucket[common.Hash, *zcache.RoundRobin[common.Hash, struct{}]]
+	txCache   *concurrent.Bucket[common.Hash, *zcache.RoundRobin[common.Hash, *types.Transaction]]
+	txFeed    event.Feed
+	scope     event.SubscriptionScope
 	TxPoolConfig
 }
 
 var _ txPool = (*TxPool)(nil)
 
 func NewTxPool(config TxPoolConfig) *TxPool {
-	return &TxPool{cache: lru.NewCache(config.Cap, 0, nil), TxPoolConfig: config}
+	if config.HashCap < config.TxCap {
+		panic("HashCap < TxCap")
+	}
+
+	return &TxPool{
+		hashCache: zcache.NewBucketRoundRobin[common.Hash, struct{}](config.HashCap, 32, func(h common.Hash) uint32 {
+			return binary.BigEndian.Uint32(h[:])
+		}),
+		txCache: zcache.NewBucketRoundRobin[common.Hash, *types.Transaction](config.TxCap, 32, func(h common.Hash) uint32 {
+			return binary.BigEndian.Uint32(h[:])
+		}),
+		TxPoolConfig: config}
 }
 
 func (pool *TxPool) Has(hash common.Hash) bool {
-	_, ok := pool.cache.Get(hash)
+	_, ok := pool.hashCache.Element(hash).Get(hash)
 	return ok
 }
 
 func (pool *TxPool) Get(hash common.Hash) *types.Transaction {
-	tx, ok := pool.cache.RGet(hash)
+	tx, ok := pool.txCache.Element(hash).Get(hash)
 	if !ok {
 		return nil
 	}
 
-	return tx.(*types.Transaction)
+	return tx
 }
 
 var (
@@ -48,7 +62,7 @@ var (
 
 func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
 	errs := make([]error, len(txs))
-	out := make([]*types.Transaction, 0)
+	out := make([]*types.Transaction, 0, len(txs))
 	for i := range txs {
 		tx := txs[i]
 
@@ -57,10 +71,14 @@ func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
 			continue
 		}
 
-		new := pool.cache.Add(tx.Hash(), tx, pool.Expire)
+		hash := tx.Hash()
+		isNew := pool.hashCache.Element(hash).Set(hash, struct{}{})
 
-		if new {
+		if isNew {
 			out = append(out, tx)
+			pool.txCache.Element(hash).Set(hash, tx)
+		} else {
+			errs[i] = core.ErrAlreadyKnown
 		}
 
 	}

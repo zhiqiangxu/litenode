@@ -216,8 +216,11 @@ github.com/zhiqiangxu/go-ethereum v1.10.2-0.20220916123306-39a9b5d683ab/go.mod h
 github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187 h1:bF09katIoN3Wgwazs9H4hjImze9CxgPzJPYokpfTcoo=
 github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187/go.mod h1:uwAt3ibiuws+at6aG4+XDXKgYLpcbuVgm5/LSAYR+XA=
 github.com/zhiqiangxu/rpheap v0.0.0-20191222053847-9002d7e5a1a1/go.mod h1:aYy7SAJP4LY667NfqoMR/ZJAy8HQ8KVtQTvEDrGS5ks=
-github.com/zhiqiangxu/util v0.0.0-20220701050115-28679d0e8a73 h1:/dR7Cl8OTC9tTjGG/N1w1tw3UI86Af8rMsXbqmVHiSs=
 github.com/zhiqiangxu/util v0.0.0-20220701050115-28679d0e8a73/go.mod h1:CokMTsNrF6lxiVwxKoAgUr2zDutb/jBcEkFNnSGXYy4=
+github.com/zhiqiangxu/util v0.0.0-20221006053922-e92ffd5dbdb0 h1:MjAGhjCfhdA/5WzSMWORvWeTXWVb3YCaEHED+thVTPk=
+github.com/zhiqiangxu/util v0.0.0-20221006053922-e92ffd5dbdb0/go.mod h1:3RIa7n1GmVQMRYJXDH1Rmz0EbMvmtGBpR1Nx6g7ji7Q=
+github.com/zhiqiangxu/zcache v0.0.0-20221006072935-bc7cf1e7d28c h1:H6Lj9lLV7M03EyHmSyOLpw96C5P/LicU98/DXkLG7ps=
+github.com/zhiqiangxu/zcache v0.0.0-20221006072935-bc7cf1e7d28c/go.mod h1:rCoHWKcoPKQrUhiG1BBtAVhixrx0T3duTsJevjtYa2o=
 go.uber.org/atomic v1.5.0 h1:OI5t8sDa1Or+q8AeE+yKeB/SDYioSHAgcVljj9JIETY=
 go.uber.org/atomic v1.5.0/go.mod h1:sABNBOSYdrvTF6hTgEIbc7YasKWGhgEQZyfxyTvoXHQ=
 go.uber.org/multierr v1.3.0 h1:sFPn2GLc3poCkfrpIXGhBD2X0CMIo4Q/zSULXrj/+uc=
