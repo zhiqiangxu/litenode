@@ -187,9 +187,6 @@ var (
 )
 
 func (h *Handler) HandleSyncChallenge(peer *eth.Peer, msg eth.Decoder) error {
-	if h.syncChallengeHeaderPool == nil {
-		return nil
-	}
 
 	// Decode the complex header query
 	var query GetBlockHeadersPacket66
@@ -205,13 +202,15 @@ func (h *Handler) HandleSyncChallenge(peer *eth.Peer, msg eth.Decoder) error {
 		return nil
 	}
 
-	header := h.syncChallengeHeaderPool.GetHeader(query.Origin.Number)
-	if header != nil {
-		// fast path
+	if h.syncChallengeHeaderPool != nil {
+		header := h.syncChallengeHeaderPool.GetHeader(query.Origin.Number)
+		if header != nil {
+			// fast path
 
-		rlpData, _ := rlp.EncodeToBytes(header)
-		response := []rlp.RawValue{rlpData}
-		return peer.ReplyBlockHeadersRLP(query.RequestId, response)
+			rlpData, _ := rlp.EncodeToBytes(header)
+			response := []rlp.RawValue{rlpData}
+			return peer.ReplyBlockHeadersRLP(query.RequestId, response)
+		}
 	}
 
 	// slow path
@@ -232,7 +231,9 @@ func (h *Handler) HandleSyncChallenge(peer *eth.Peer, msg eth.Decoder) error {
 				return
 			}
 
-			h.syncChallengeHeaderPool.AddHeaderIfNotExists(headers[0])
+			if h.syncChallengeHeaderPool != nil {
+				h.syncChallengeHeaderPool.AddHeaderIfNotExists(headers[0])
+			}
 
 			rlpData, _ := rlp.EncodeToBytes(headers[0])
 			response := []rlp.RawValue{rlpData}
