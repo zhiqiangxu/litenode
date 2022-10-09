@@ -89,7 +89,12 @@ func handleNewPooledTransactionHashes(backend eth.Backend, msg eth.Decoder, peer
 
 // handleGetBlockHeaders66 is the eth/66 version of handleGetBlockHeaders
 func handleGetBlockHeaders66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
-	return backend.HandleSyncChallenge(peer, msg)
+	// Decode the complex header query
+	query := new(GetBlockHeadersPacket66)
+	if err := msg.Decode(query); err != nil {
+		return fmt.Errorf("%w: message %v: %v", errDecode, msg, err)
+	}
+	return backend.Handle(peer, query)
 }
 
 func handleBlockHeaders(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {

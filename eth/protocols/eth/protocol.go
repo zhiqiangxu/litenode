@@ -28,13 +28,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-// Constants to match up protocol versions and messages
-const (
-	ETH65 = 65
-	ETH66 = 66
-	ETH67 = 67
-)
-
 // ProtocolName is the official short name of the `eth` protocol used during
 // devp2p capability negotiation.
 const ProtocolName = "eth"

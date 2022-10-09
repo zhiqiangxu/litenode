@@ -1,7 +1,7 @@
 package litenode
 
-import "github.com/zhiqiangxu/litenode/eth"
+import "github.com/zhiqiangxu/litenode/eth/common"
 
 type Config struct {
-	Eth *eth.NodeConfig
+	Eth *common.NodeConfig
 }

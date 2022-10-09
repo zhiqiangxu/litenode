@@ -1,19 +1,19 @@
-package litenode
+package main
 
 import (
-	"testing"
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/zhiqiangxu/litenode"
 	"github.com/zhiqiangxu/litenode/eth"
 	common2 "github.com/zhiqiangxu/litenode/eth/common"
-	"gotest.tools/v3/assert"
 )
 
-func TestHello(t *testing.T) {
-	config := Config{
+func main() {
+	config := litenode.Config{
 		Eth: &common2.NodeConfig{
 			P2P: p2p.Config{
 				MaxPeers: 999,
@@ -34,15 +34,31 @@ func TestHello(t *testing.T) {
 				Versions: []uint{common2.ETH67, common2.ETH66},
 				Lengths:  map[uint]uint64{common2.ETH67: 17, common2.ETH66: 17},
 			},
+			SnapProtocolVersions: &common2.ProtocolVersions{
+				Versions: []uint{common2.SNAP1},
+				Lengths:  map[uint]uint64{common2.SNAP1: 8},
+			},
 		},
 	}
-	node := New(config)
+	node := litenode.New(config)
 
 	err := node.Start()
-	assert.Assert(t, err == nil)
+	if err != nil {
+		panic(err)
+	}
 
-	for i := 0; i < 15; i++ {
-		t.Log("#peers", node.Eth.PeerCount())
+	go func() {
+		ch := make(chan common2.SnapSyncPacket)
+		sub := node.Eth.SubscribeSnapSyncMsg(ch)
+		defer sub.Unsubscribe()
+
+		for {
+			packet := <-ch
+			fmt.Println(packet.Packet)
+		}
+	}()
+	for {
+		fmt.Println("#peers", node.Eth.PeerCount())
 		time.Sleep(time.Second)
 	}
 }

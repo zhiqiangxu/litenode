@@ -1,4 +1,4 @@
-package eth
+package internal
 
 import (
 	"encoding/binary"
@@ -8,26 +8,43 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
+	common2 "github.com/zhiqiangxu/litenode/eth/common"
 	"github.com/zhiqiangxu/util/concurrent"
 	"github.com/zhiqiangxu/zcache"
 )
-
-type TxPoolConfig struct {
-	HashCap int
-	TxCap   int
-}
 
 type TxPool struct {
 	hashCache *concurrent.Bucket[common.Hash, *zcache.RoundRobin[common.Hash, struct{}]]
 	txCache   *concurrent.Bucket[common.Hash, *zcache.RoundRobin[common.Hash, *types.Transaction]]
 	txFeed    event.Feed
 	scope     event.SubscriptionScope
-	TxPoolConfig
+	common2.TxPoolConfig
+}
+
+type txPool interface {
+	// Has returns an indicator whether txpool has a transaction
+	// cached with the given hash.
+	Has(hash common.Hash) bool
+
+	// Get retrieves the transaction from local txpool with given
+	// tx hash.
+	Get(hash common.Hash) *types.Transaction
+
+	// AddRemotes should add the given transactions to the pool.
+	AddRemotes([]*types.Transaction) []error
+
+	// Pending should return pending transactions.
+	// The slice should be modifiable by the caller.
+	Pending(enforceTips bool) map[common.Address]types.Transactions
+
+	// SubscribeNewTxsEvent should return an event subscription of
+	// NewTxsEvent and send events to the given channel.
+	SubscribeNewTxsEvent(chan<- core.NewTxsEvent) event.Subscription
 }
 
 var _ txPool = (*TxPool)(nil)
 
-func NewTxPool(config TxPoolConfig) *TxPool {
+func NewTxPool(config common2.TxPoolConfig) *TxPool {
 	if config.HashCap < config.TxCap {
 		panic("HashCap < TxCap")
 	}

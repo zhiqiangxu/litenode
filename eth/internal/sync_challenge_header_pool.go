@@ -1,22 +1,18 @@
-package eth
+package internal
 
 import (
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/zhiqiangxu/litenode/eth/common"
 	"github.com/zhiqiangxu/lru"
 )
-
-type SyncChallengeHeaderPoolConfig struct {
-	Cap    int
-	Expire int
-}
 
 // this module only stores headers for sync chanllenge
 type SyncChallengeHeaderPool struct {
 	cache lru.Cache
-	SyncChallengeHeaderPoolConfig
+	common.SyncChallengeHeaderPoolConfig
 }
 
-func NewSyncChallengeHeaderool(config SyncChallengeHeaderPoolConfig) *SyncChallengeHeaderPool {
+func NewSyncChallengeHeaderool(config common.SyncChallengeHeaderPoolConfig) *SyncChallengeHeaderPool {
 	return &SyncChallengeHeaderPool{cache: lru.NewCache(config.Cap, 0, nil), SyncChallengeHeaderPoolConfig: config}
 }
 

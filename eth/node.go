@@ -8,33 +8,30 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/zhiqiangxu/litenode/eth/common"
+	"github.com/zhiqiangxu/litenode/eth/internal"
+	eth2 "github.com/zhiqiangxu/litenode/eth/protocols/eth"
+	"github.com/zhiqiangxu/litenode/eth/protocols/snap"
 )
 
 type Node struct {
 	handler *Handler
-	txPool  *TxPool
+	txPool  *internal.TxPool
 	server  *p2p.Server
 }
 
-type NodeConfig struct {
-	P2P                     p2p.Config
-	Handler                 HandlerConfig
-	TxPool                  TxPoolConfig
-	SyncChallengeHeaderPool *SyncChallengeHeaderPoolConfig
-	LogLevel                log.Lvl
-	ProtocolVersions        ProtocolVersions
-}
+func NewNode(config *common.NodeConfig) *Node {
+	txPool := internal.NewTxPool(config.TxPool)
 
-func NewNode(config *NodeConfig) *Node {
-	txPool := NewTxPool(config.TxPool)
-
-	config.Handler.txPool = txPool
-
+	var syncChallengeHeaderPool *internal.SyncChallengeHeaderPool
 	if config.SyncChallengeHeaderPool != nil {
-		config.Handler.syncChallengeHeaderPool = NewSyncChallengeHeaderool(*config.SyncChallengeHeaderPool)
+		syncChallengeHeaderPool = internal.NewSyncChallengeHeaderool(*config.SyncChallengeHeaderPool)
 	}
-	handler := NewHandler(config.Handler, config.P2P.MaxPeers)
-	config.P2P.Protocols = MakeProtocols(handler, config.ProtocolVersions)
+	handler := NewHandler(config.Handler, txPool, syncChallengeHeaderPool, config.SnapProtocolVersions != nil && len(config.SnapProtocolVersions.Versions) > 0, config.P2P.MaxPeers)
+	config.P2P.Protocols = eth2.MakeProtocols((*ethHandler)(handler), config.EthProtocolVersions)
+	if config.SnapProtocolVersions != nil {
+		config.P2P.Protocols = append(config.P2P.Protocols, snap.MakeProtocols((*snapHandler)(handler), *config.SnapProtocolVersions)...)
+	}
 	if config.P2P.Logger == nil {
 		config.P2P.Logger = log.New()
 	}
@@ -67,24 +64,25 @@ func (n *Node) Stop() {
 }
 
 func (n *Node) BroadcastTransactions(txs types.Transactions) {
-	select {
-	case n.handler.pout <- txs:
-	case <-n.handler.txsSub.Err():
-	}
+	n.handler.BroadcastLocalTransactions(txs)
 }
 
 func (n *Node) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
 	return n.txPool.SubscribeNewTxsEvent(ch)
 }
 
-func (n *Node) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription {
+func (n *Node) SubscribeChainHeadEvent(ch chan<- common.ChainHeadEvent) event.Subscription {
 	return n.handler.SubscribeChainHeadsEvent(ch)
 }
 
+func (n *Node) SubscribeSnapSyncMsg(ch chan<- common.SnapSyncPacket) event.Subscription {
+	return n.handler.SubscribeSnapSyncMsg(ch)
+}
+
 func (n *Node) PeerCount() int {
-	return n.handler.peers.Len()
+	return n.handler.PeerCount()
 }
 
 func (n *Node) AllPeers() []*eth.EthPeer {
-	return n.handler.peers.AllPeers()
+	return n.handler.AllPeers()
 }
