@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/rlp"
 	common2 "github.com/zhiqiangxu/litenode/eth/common"
+	eth2 "github.com/zhiqiangxu/litenode/eth/protocols/eth"
 )
 
 // ethHandler implements the eth.Backend interface to handle the various network
@@ -33,6 +34,7 @@ func (h *ethHandler) AcceptTxs() bool {
 }
 
 func (h *ethHandler) RunPeer(peer *eth.Peer, handler eth.Handler) error {
+
 	var ext *snap.Peer
 	if h.snapEnabled {
 		var err error
@@ -96,7 +98,7 @@ var (
 	errPeerNotRegistered = errors.New("peer not registered")
 )
 
-func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth.GetBlockHeadersPacket66) error {
+func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth2.GetBlockHeadersPacket66) error {
 
 	if query.Origin.Hash != zeroHash {
 		return nil
@@ -129,7 +131,7 @@ func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth.GetBlockHead
 
 		select {
 		case res := <-resCh:
-			headers := ([]*types.Header)(*res.Res.(*eth.BlockHeadersPacket))
+			headers := ([]*types.Header)(*res.Res.(*eth2.BlockHeadersPacket))
 			if len(headers) != 1 {
 				res.Done <- errors.New("#headers != 1")
 				return
@@ -160,26 +162,26 @@ func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth.GetBlockHead
 func (h *ethHandler) Handle(peer *eth.Peer, packet eth.Packet) error {
 	// Consume any broadcasts and announces, forwarding the rest to the downloader
 	switch packet := packet.(type) {
-	case *eth.NewBlockHashesPacket:
+	case *eth2.NewBlockHashesPacket:
 		for _, block := range *packet {
 			h.blockFeed.Send(common2.ChainHeadEvent{Hash: block.Hash, Number: block.Number, Enode: peer.Node()})
 		}
 		return nil
 
-	case *eth.NewBlockPacket:
+	case *eth2.NewBlockPacket:
 		h.blockFeed.Send(common2.ChainHeadEvent{Block: packet.Block, Hash: packet.Block.Hash(), Number: packet.Block.NumberU64(), Enode: peer.Node()})
 		return nil
 
-	case *eth.NewPooledTransactionHashesPacket:
+	case *eth2.NewPooledTransactionHashesPacket:
 		return h.txFetcher.Notify(peer.ID(), *packet)
 
-	case *eth.TransactionsPacket:
+	case *eth2.TransactionsPacket:
 		return h.txFetcher.Enqueue(peer.ID(), *packet, false)
 
-	case *eth.PooledTransactionsPacket:
+	case *eth2.PooledTransactionsPacket:
 		return h.txFetcher.Enqueue(peer.ID(), *packet, true)
 
-	case *eth.BlockHeadersPacket:
+	case *eth2.BlockHeadersPacket:
 		// if len(*packet) != 1 {
 		// 	return nil
 		// }
@@ -199,13 +201,13 @@ func (h *ethHandler) Handle(peer *eth.Peer, packet eth.Packet) error {
 
 		// }
 		return nil
-	case *eth.GetBlockHeadersPacket66:
+	case *eth2.GetBlockHeadersPacket66:
 		return h.handleSyncChallenge(peer, packet)
-	case *eth.BlockBodiesPacket:
+	case *eth2.BlockBodiesPacket:
 		return nil
-	case *eth.NodeDataPacket:
+	case *eth2.NodeDataPacket:
 		return nil
-	case *eth.ReceiptsPacket:
+	case *eth2.ReceiptsPacket:
 		return nil
 	default:
 		return fmt.Errorf("unexpected eth packet type: %T", packet)

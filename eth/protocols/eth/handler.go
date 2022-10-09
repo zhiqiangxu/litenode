@@ -14,11 +14,15 @@ import (
 func MakeProtocols(backend eth.Backend, protocolVersions common2.ProtocolVersions) []p2p.Protocol {
 	protocols := make([]p2p.Protocol, len(protocolVersions.Versions))
 
+	name := protocolVersions.Name
+	if name == "" {
+		name = ProtocolName
+	}
 	for i, version := range protocolVersions.Versions {
 		version := version // Closure
 
 		protocols[i] = p2p.Protocol{
-			Name:    ProtocolName,
+			Name:    name,
 			Version: version,
 			Length:  protocolVersions.Lengths[version],
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {

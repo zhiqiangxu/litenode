@@ -19,6 +19,7 @@ const (
 )
 
 type ProtocolVersions struct {
+	Name     string          `json:"name"`
 	Versions []uint          `json:"versions"`
 	Lengths  map[uint]uint64 `json:"lengths"`
 }

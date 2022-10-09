@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/ethereum/go-ethereum v1.10.20
 	github.com/panjf2000/ants v1.3.0
+	github.com/rs/zerolog v1.28.0
 	github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187
 	github.com/zhiqiangxu/util v0.0.0-20221006053922-e92ffd5dbdb0
 	github.com/zhiqiangxu/zcache v0.0.0-20221006072935-bc7cf1e7d28c
