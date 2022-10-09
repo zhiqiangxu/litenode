@@ -8,10 +8,10 @@
 ```golang
 package main
 
-import "github.com/zhiqiangxu/litenode"
+import "github.com/zhiqiangxu/litenode/eth/common"
 
 config := Config{
-    Eth: &eth.NodeConfig{
+    Eth: &common.NodeConfig{
         P2P: p2p.Config{
             MaxPeers: 999,
             BootstrapNodes: eth.Nodes{
@@ -21,15 +21,15 @@ config := Config{
             TrustedNodes: eth.Nodes{}.Convert(),
             // EnableMsgEvents: true,
         },
-        Handler: eth.HandlerConfig{
+        Handler: common.HandlerConfig{
             NetworkID:   1,
             GenesisHash: common.HexToHash("0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3"),
         },
-        TxPool:   eth.TxPoolConfig{Cap: 10000, Expire: 10 * 60},
+        TxPool:   common.TxPoolConfig{HashCap: 10000, TxCap: 100},
         LogLevel: log.LvlDebug,
-        ProtocolVersions: eth.ProtocolVersions{
-            Versions: []uint{eth.ETH67, eth.ETH66},
-            Lengths:  map[uint]uint64{eth.ETH67: 17, eth.ETH66: 17},
+        EthProtocolVersions: common.ProtocolVersions{
+            Versions: []uint{common.ETH67, common.ETH66},
+            Lengths:  map[uint]uint64{common.ETH67: 17, common.ETH66: 17},
         },
     },
 }
