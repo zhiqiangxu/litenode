@@ -3,7 +3,7 @@ module github.com/zhiqiangxu/litenode
 go 1.18
 
 require (
-	github.com/ethereum/go-ethereum v1.10.20
+	github.com/ethereum/go-ethereum v1.10.25
 	github.com/panjf2000/ants v1.3.0
 	github.com/rs/zerolog v1.28.0
 	github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187
@@ -57,6 +57,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef // indirect
 	github.com/urfave/cli/v2 v2.10.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
+	github.com/zhiqiangxu/devp2p v0.0.0-20221011184326-ba3afc5a5aea // indirect
 	go.uber.org/atomic v1.5.0 // indirect
 	go.uber.org/multierr v1.3.0 // indirect
 	go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee // indirect
@@ -74,4 +75,4 @@ require (
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.10.20 => github.com/zhiqiangxu/go-ethereum v1.10.2-0.20221009120211-23f5a4bcf643
+replace github.com/ethereum/go-ethereum v1.10.25 => github.com/zhiqiangxu/go-ethereum v1.10.2-0.20221013053952-8fc36e8a7f3e

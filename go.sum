@@ -216,8 +216,10 @@ github.com/urfave/cli/v2 v2.10.2/go.mod h1:f8iq5LtQ/bLxafbdBSLPPNsgaW0l/2fYYEHhA
 github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 h1:bAn7/zixMGCfxrRTfdpNzjtPYqr8smhKouy9mxVdGPU=
 github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673/go.mod h1:N3UwUGtsrSj3ccvlPHLoLsHnpR27oXr4ZE984MbSER8=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-github.com/zhiqiangxu/go-ethereum v1.10.2-0.20221009120211-23f5a4bcf643 h1:NIF6FsuEBm45Bq2b8dpREA//BzTRx/GnQmgy7WISqQU=
-github.com/zhiqiangxu/go-ethereum v1.10.2-0.20221009120211-23f5a4bcf643/go.mod h1:m2m08SAQ8XB0VcVBoDg9n74Dw5PUMl3hzv1NXVBFPfg=
+github.com/zhiqiangxu/devp2p v0.0.0-20221011184326-ba3afc5a5aea h1:5TqyV3eUJUlPiPODmiWmY5u3dOMKhFMsB4YGJSbAs4o=
+github.com/zhiqiangxu/devp2p v0.0.0-20221011184326-ba3afc5a5aea/go.mod h1:Cs7NFzasqJenrFx42EgRkc7+SIU0OGQcAbh6c+4z1GQ=
+github.com/zhiqiangxu/go-ethereum v1.10.2-0.20221013053952-8fc36e8a7f3e h1:xKp/b2Ckx05GuvhPxbrfxMuRW9bPpb3sb56oYuB+LPU=
+github.com/zhiqiangxu/go-ethereum v1.10.2-0.20221013053952-8fc36e8a7f3e/go.mod h1:UHdcgjpjoxT7XYNjKoJo0Xq4YVahigjQ8KPRk1X3WXg=
 github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187 h1:bF09katIoN3Wgwazs9H4hjImze9CxgPzJPYokpfTcoo=
 github.com/zhiqiangxu/lru v0.0.0-20220720104822-6ba0a3e81187/go.mod h1:uwAt3ibiuws+at6aG4+XDXKgYLpcbuVgm5/LSAYR+XA=
 github.com/zhiqiangxu/rpheap v0.0.0-20191222053847-9002d7e5a1a1/go.mod h1:aYy7SAJP4LY667NfqoMR/ZJAy8HQ8KVtQTvEDrGS5ks=

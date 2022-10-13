@@ -1,7 +1,10 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/eth/protocols/eth"
 	"github.com/zhiqiangxu/litenode/eth/common"
 	"github.com/zhiqiangxu/lru"
 )
@@ -25,42 +28,6 @@ func (pool *SyncChallengeHeaderPool) GetHeader(height uint64) *types.Header {
 	return header.(*types.Header)
 }
 
-// func (pool *SyncChallengeHeaderPool) pendingRequestKey(height uint64) string {
-// 	return fmt.Sprintf("p:%d", height)
-// }
-
-// type chanllengeCB struct {
-// 	requestID uint64
-// 	peer      *eth.Peer
-// }
-
-// func (pool *SyncChallengeHeaderPool) RememberChallenge(height uint64, req *chanllengeCB) {
-// 	key := pool.pendingRequestKey(height)
-// 	pool.cache.Txn(func(t lru.Txn) {
-// 		pending, ok := t.Get(key)
-// 		if !ok {
-// 			t.Add(key, []*chanllengeCB{req}, pool.Expire)
-// 			return
-// 		}
-
-// 		newPending := append(pending.([]*chanllengeCB), req)
-// 		t.Add(key, newPending, pool.Expire)
-// 	})
-// }
-
-// func (pool *SyncChallengeHeaderPool) ClearChallenge(height uint64) []*chanllengeCB {
-// 	key := pool.pendingRequestKey(height)
-// 	pending, ok := pool.cache.RGet(key)
-// 	if !ok {
-// 		return nil
-// 	}
-
-// 	// the racing is intentionally ignored here.
-// 	pool.cache.Remove(key)
-
-// 	return pending.([]*chanllengeCB)
-// }
-
 func (pool *SyncChallengeHeaderPool) AddHeaderIfNotExists(header *types.Header) {
 
 	pool.cache.CompareAndSet(header.Number.Uint64(), func(value interface{}, exists bool, t lru.Txn) {
@@ -71,4 +38,41 @@ func (pool *SyncChallengeHeaderPool) AddHeaderIfNotExists(header *types.Header) 
 		t.Add(header.Number.Uint64(), header, pool.Expire)
 	})
 	pool.cache.Add(header.Number.Uint64(), header, pool.Expire)
+}
+
+// ------------ only used for old protocols ------
+
+func (pool *SyncChallengeHeaderPool) pendingRequestKey(height uint64) string {
+	return fmt.Sprintf("p:%d", height)
+}
+
+type ChanllengeCB struct {
+	Peer *eth.Peer
+}
+
+func (pool *SyncChallengeHeaderPool) RememberChallenge(height uint64, req *ChanllengeCB) {
+	key := pool.pendingRequestKey(height)
+	pool.cache.Txn(func(t lru.Txn) {
+		pending, ok := t.Get(key)
+		if !ok {
+			t.Add(key, []*ChanllengeCB{req}, pool.Expire)
+			return
+		}
+
+		newPending := append(pending.([]*ChanllengeCB), req)
+		t.Add(key, newPending, pool.Expire)
+	})
+}
+
+func (pool *SyncChallengeHeaderPool) ClearChallenge(height uint64) []*ChanllengeCB {
+	key := pool.pendingRequestKey(height)
+	pending, ok := pool.cache.RGet(key)
+	if !ok {
+		return nil
+	}
+
+	// the racing is intentionally ignored here.
+	pool.cache.Remove(key)
+
+	return pending.([]*ChanllengeCB)
 }

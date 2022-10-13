@@ -7,8 +7,16 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/protocols/eth"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/trie"
+	zlog "github.com/rs/zerolog/log"
 )
+
+func handleNOOP(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
+
+	zlog.Info().Uint64("code", msg.(p2p.Msg).Code).Str("id", peer.ID()).Msg("handled as noop")
+	return nil
+}
 
 func handleNewBlockhashes(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// A batch of new block announcements just arrived
@@ -91,6 +99,15 @@ func handleNewPooledTransactionHashes(backend eth.Backend, msg eth.Decoder, peer
 func handleGetBlockHeaders66(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
 	// Decode the complex header query
 	query := new(GetBlockHeadersPacket66)
+	if err := msg.Decode(query); err != nil {
+		return fmt.Errorf("%w: message %v: %v", errDecode, msg, err)
+	}
+	return backend.Handle(peer, query)
+}
+
+func handleGetBlockHeaders(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error {
+	// Decode the complex header query
+	query := new(GetBlockHeadersPacket)
 	if err := msg.Decode(query); err != nil {
 		return fmt.Errorf("%w: message %v: %v", errDecode, msg, err)
 	}

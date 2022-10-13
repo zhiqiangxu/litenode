@@ -13,7 +13,9 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/rlp"
+	zlog "github.com/rs/zerolog/log"
 	common2 "github.com/zhiqiangxu/litenode/eth/common"
+	"github.com/zhiqiangxu/litenode/eth/internal"
 	eth2 "github.com/zhiqiangxu/litenode/eth/protocols/eth"
 )
 
@@ -98,7 +100,28 @@ var (
 	errPeerNotRegistered = errors.New("peer not registered")
 )
 
-func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth2.GetBlockHeadersPacket66) error {
+func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth2.GetBlockHeadersPacket) error {
+	if query.Origin.Hash != zeroHash {
+		zlog.Info().Str("id", peer.ID()).Msg("ignored GetBlockHeadersPacket for non challenge")
+		return nil
+	}
+
+	if query.Amount != 1 {
+		zlog.Info().Str("id", peer.ID()).Msg("ignored GetBlockHeadersPacket for non challenge")
+		return nil
+	}
+
+	zlog.Info().Str("id", peer.ID()).Msg("handle sync challenge for old protocol")
+
+	err := p2p.Send(peer.RW, eth2.GetBlockHeadersMsg, query)
+	if err != nil {
+		return err
+	}
+	h.syncChallengeHeaderPool.RememberChallenge(query.Origin.Number, &internal.ChanllengeCB{Peer: peer})
+	return nil
+}
+
+func (h *ethHandler) handleSyncChallenge66(peer *eth.Peer, query *eth2.GetBlockHeadersPacket66) error {
 
 	if query.Origin.Hash != zeroHash {
 		return nil
@@ -107,6 +130,8 @@ func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth2.GetBlockHea
 	if query.Amount != 1 {
 		return nil
 	}
+
+	zlog.Info().Str("id", peer.ID()).Msg("handle sync challenge")
 
 	if h.syncChallengeHeaderPool != nil {
 		header := h.syncChallengeHeaderPool.GetHeader(query.Origin.Number)
@@ -182,26 +207,32 @@ func (h *ethHandler) Handle(peer *eth.Peer, packet eth.Packet) error {
 		return h.txFetcher.Enqueue(peer.ID(), *packet, true)
 
 	case *eth2.BlockHeadersPacket:
-		// if len(*packet) != 1 {
-		// 	return nil
-		// }
-		// challenges := h.syncChallengeHeaderPool.ClearChallenge((*packet)[0].Number.Uint64())
-		// if len(challenges) == 0 {
-		// 	return nil
-		// }
+		if len(*packet) != 1 {
+			return nil
+		}
+		if h.syncChallengeHeaderPool == nil {
+			return nil
+		}
+		challenges := h.syncChallengeHeaderPool.ClearChallenge((*packet)[0].Number.Uint64())
+		if len(challenges) == 0 {
+			return nil
+		}
 
-		// rlpData, _ := rlp.EncodeToBytes((*packet)[0])
-		// response := []rlp.RawValue{rlpData}
-		// for i := range challenges {
-		// 	challenge := challenges[i]
+		hash := (*packet)[0].Hash().Hex()
 
-		// 	go func() {
-		// 		challenge.peer.ReplyBlockHeadersRLP(challenge.requestID, response)
-		// 	}()
+		for i := range challenges {
+			challenge := challenges[i]
 
-		// }
+			go func() {
+				p2p.Send(challenge.Peer.RW, eth2.BlockHeadersMsg, packet)
+				zlog.Info().Str("id", challenge.Peer.ID()).Uint64("height", (*packet)[0].Number.Uint64()).Str("hash", hash).Msg("finalize sync challenge")
+			}()
+
+		}
 		return nil
 	case *eth2.GetBlockHeadersPacket66:
+		return h.handleSyncChallenge66(peer, packet)
+	case *eth2.GetBlockHeadersPacket:
 		return h.handleSyncChallenge(peer, packet)
 	case *eth2.BlockBodiesPacket:
 		return nil

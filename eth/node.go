@@ -27,6 +27,20 @@ func NewNode(config *common.NodeConfig) *Node {
 	if config.SyncChallengeHeaderPool != nil {
 		syncChallengeHeaderPool = internal.NewSyncChallengeHeaderool(*config.SyncChallengeHeaderPool)
 	}
+	// ensure syncChallengeHeaderPool is created for old protocol since sync challenge will use it
+	if syncChallengeHeaderPool == nil {
+		hasOldProtocol := false
+		for _, version := range config.EthProtocolVersions.Versions {
+			if version < common.ETH65 {
+				hasOldProtocol = true
+				break
+			}
+		}
+		if hasOldProtocol {
+			syncChallengeHeaderPool = internal.NewSyncChallengeHeaderool(common.SyncChallengeHeaderPoolConfig{Cap: 100, Expire: 0})
+		}
+	}
+
 	handler := NewHandler(config.Handler, txPool, syncChallengeHeaderPool, config.SnapProtocolVersions != nil && len(config.SnapProtocolVersions.Versions) > 0, config.P2P.MaxPeers)
 	config.P2P.Protocols = eth2.MakeProtocols((*ethHandler)(handler), config.EthProtocolVersions)
 	if config.SnapProtocolVersions != nil {

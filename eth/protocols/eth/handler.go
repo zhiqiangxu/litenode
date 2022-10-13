@@ -55,6 +55,20 @@ func Handle(backend eth.Backend, peer *eth.Peer) error {
 
 type msgHandler func(backend eth.Backend, msg eth.Decoder, peer *eth.Peer) error
 
+var eth63 = map[uint64]msgHandler{
+	NewBlockHashesMsg:  handleNOOP,
+	TransactionsMsg:    handleTransactions,
+	GetBlockHeadersMsg: handleGetBlockHeaders,
+	BlockHeadersMsg:    handleBlockHeaders,
+	GetBlockBodiesMsg:  handleNOOP,
+	BlockBodiesMsg:     handleNOOP,
+	NewBlockMsg:        handleNewBlock,
+	GetNodeDataMsg:     handleNOOP,
+	NodeDataMsg:        handleNOOP,
+	GetReceiptsMsg:     handleNOOP,
+	ReceiptsMsg:        handleNOOP,
+}
+
 var eth65 = map[uint64]msgHandler{
 	GetBlockHeadersMsg:            handleGetBlockHeaders66,
 	BlockHeadersMsg:               handleBlockHeaders,
@@ -115,11 +129,13 @@ func handleMessage(backend eth.Backend, peer *eth.Peer) error {
 	}
 	defer msg.Discard()
 
-	var handlers = eth65
+	var handlers = eth63
 	if peer.Version() >= common2.ETH67 {
 		handlers = eth67
 	} else if peer.Version() >= common2.ETH66 {
 		handlers = eth66
+	} else if peer.Version() >= common2.ETH65 {
+		handlers = eth65
 	}
 
 	// Track the amount of time it takes to serve the request and run the handler

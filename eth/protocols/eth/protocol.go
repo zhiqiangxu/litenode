@@ -54,10 +54,9 @@ const (
 )
 
 var (
-	errPeerNotRegistered = errors.New("peer not registered")
-	errMsgTooLarge       = errors.New("message too long")
-	errDecode            = errors.New("invalid message")
-	errInvalidMsgCode    = errors.New("invalid message code")
+	errMsgTooLarge    = errors.New("message too long")
+	errDecode         = errors.New("invalid message")
+	errInvalidMsgCode = errors.New("invalid message code")
 )
 
 // Packet represents a p2p message in the `eth` protocol.
