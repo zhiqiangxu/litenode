@@ -59,9 +59,10 @@ type Handler struct {
 	txPool                  *internal.TxPool
 	syncChallengeHeaderPool *internal.SyncChallengeHeaderPool
 
-	blockFeed event.Feed
-	snapFeed  event.Feed
-	scope     event.SubscriptionScope
+	blockFeed  event.Feed
+	snapFeed   event.Feed
+	statusFeed event.Feed
+	scope      event.SubscriptionScope
 
 	snapEnabled bool
 	maxPeers    int
@@ -109,6 +110,10 @@ func (h *Handler) SubscribeChainHeadsEvent(ch chan<- common2.ChainHeadEvent) eve
 
 func (h *Handler) SubscribeSnapSyncMsg(ch chan<- common2.SnapSyncPacket) event.Subscription {
 	return h.scope.Track(h.snapFeed.Subscribe(ch))
+}
+
+func (h *Handler) SubscribeStatusMsg(ch chan<- eth.MinStatus) event.Subscription {
+	return h.scope.Track(h.statusFeed.Subscribe(ch))
 }
 
 func (h *Handler) unregisterPeer(id string) {

@@ -51,13 +51,17 @@ func (h *ethHandler) RunPeer(peer *eth.Peer, handler eth.Handler) error {
 	h.peerWG.Add(1)
 	defer h.peerWG.Done()
 
-	if err := peer.HandshakeLite(h.NetworkID, h.GenesisHash, h.Upgrade); err != nil {
+	ms, err := peer.HandshakeLite(h.NetworkID, h.GenesisHash, h.Upgrade)
+	if err != nil {
 		// zlog.Error().Err(err).
 		// 	Str("peer.id", peer.ID()).
 		// 	Str("peer.ip", peer.RemoteAddr().String()).
 		// 	Str("status", "failed").
 		// 	Msg("ethereum:handshake")
 		return err
+	}
+	if h.StatusFeed {
+		h.statusFeed.Send(ms)
 	}
 
 	// Ignore maxPeers if this is a trusted peer

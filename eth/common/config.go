@@ -41,6 +41,7 @@ type HandlerConfig struct {
 
 	Upgrade bool
 
+	StatusFeed bool
 	SnapSyncer SnapSyncer
 }
 
