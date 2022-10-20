@@ -102,12 +102,12 @@ var (
 
 func (h *ethHandler) handleSyncChallenge(peer *eth.Peer, query *eth2.GetBlockHeadersPacket) error {
 	if query.Origin.Hash != zeroHash {
-		zlog.Info().Str("id", peer.ID()).Msg("ignored GetBlockHeadersPacket for non challenge")
+		zlog.Info().Str("id", peer.ID()).Str("hash", query.Origin.Hash.Hex()).Msg("ignored GetBlockHeadersPacket for non challenge")
 		return nil
 	}
 
 	if query.Amount != 1 {
-		zlog.Info().Str("id", peer.ID()).Msg("ignored GetBlockHeadersPacket for non challenge")
+		zlog.Info().Str("id", peer.ID()).Uint64("amount", query.Amount).Msg("ignored GetBlockHeadersPacket for non challenge")
 		return nil
 	}
 
