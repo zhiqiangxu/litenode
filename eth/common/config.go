@@ -2,6 +2,7 @@ package common
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/eth/protocols/snap"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 )
@@ -39,6 +40,13 @@ type HandlerConfig struct {
 	GenesisHash common.Hash
 
 	Upgrade bool
+
+	SnapSyncer SnapSyncer
+}
+
+type SnapSyncer interface {
+	Register(peer *snap.Peer) error
+	Unregister(peer *snap.Peer) error
 }
 
 type TxPoolConfig struct {

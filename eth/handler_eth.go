@@ -37,12 +37,12 @@ func (h *ethHandler) AcceptTxs() bool {
 
 func (h *ethHandler) RunPeer(peer *eth.Peer, handler eth.Handler) error {
 
-	var ext *snap.Peer
+	var snapPeer *snap.Peer
 	if h.snapEnabled {
 		var err error
 		// If the peer has a `snap` extension, wait for it to connect so we can have
 		// a uniform initialization/teardown mechanism
-		ext, err = h.peers.WaitSnapExtension(peer)
+		snapPeer, err = h.peers.WaitSnapExtension(peer)
 		if err != nil {
 			peer.Log().Error("Snapshot extension barrier failed", "err", err)
 			return err
@@ -68,7 +68,7 @@ func (h *ethHandler) RunPeer(peer *eth.Peer, handler eth.Handler) error {
 	}
 	peer.Log().Debug("Ethereum peer connected", "name", peer.Name())
 	// Register the peer locally
-	if err := h.peers.RegisterPeer(peer, ext); err != nil {
+	if err := h.peers.RegisterPeer(peer, snapPeer); err != nil {
 		peer.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
@@ -77,6 +77,16 @@ func (h *ethHandler) RunPeer(peer *eth.Peer, handler eth.Handler) error {
 	p := h.peers.Peer(peer.ID())
 	if p == nil {
 		return errors.New("peer dropped during handling")
+	}
+
+	if snapPeer != nil {
+		if h.SnapSyncer != nil {
+			if err := h.SnapSyncer.Register(snapPeer); err != nil {
+				peer.Log().Error("Failed to register peer in snap syncer", "err", err)
+				return err
+			}
+		}
+
 	}
 
 	return handler(peer)

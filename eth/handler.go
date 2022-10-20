@@ -129,6 +129,11 @@ func (h *Handler) unregisterPeer(id string) {
 	// Remove the `eth` peer if it exists
 	logger.Debug("Removing Ethereum peer", "id", id)
 
+	if peer.SnapExt != nil {
+		if h.SnapSyncer != nil {
+			h.SnapSyncer.Unregister(peer.SnapExt.Peer)
+		}
+	}
 	h.txFetcher.Drop(id)
 
 	if err := h.peers.UnregisterPeer(id); err != nil {
