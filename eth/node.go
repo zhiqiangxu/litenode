@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth"
+	eth3 "github.com/ethereum/go-ethereum/eth/protocols/eth"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -91,6 +92,10 @@ func (n *Node) SubscribeChainHeadEvent(ch chan<- common.ChainHeadEvent) event.Su
 
 func (n *Node) SubscribeSnapSyncMsg(ch chan<- common.SnapSyncPacket) event.Subscription {
 	return n.handler.SubscribeSnapSyncMsg(ch)
+}
+
+func (n *Node) SubscribeStatusMsg(ch chan<- eth3.MinStatus) event.Subscription {
+	return n.handler.SubscribeStatusMsg(ch)
 }
 
 func (n *Node) PeerCount() int {
