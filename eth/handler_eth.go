@@ -161,12 +161,16 @@ func (h *ethHandler) handleSyncChallenge66(peer *eth.Peer, query *eth2.GetBlockH
 	// slow path
 
 	resCh := make(chan *eth.Response)
-	if _, err := peer.RequestHeadersByNumber(query.Origin.Number, 1, 0, false, resCh); err != nil {
+	req, err := peer.RequestHeadersByNumber(query.Origin.Number, 1, 0, false, resCh)
+	if err != nil {
 		return err
 	}
 	go func() {
 		timeout := time.NewTimer(syncChallengeTimeout)
-		defer timeout.Stop()
+		defer func() {
+			req.Close()
+			timeout.Stop()
+		}()
 
 		select {
 		case res := <-resCh:
